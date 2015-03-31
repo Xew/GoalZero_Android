@@ -12,4 +12,5 @@
     <string name="title_activity_device_found">DeviceFound</string>
     <string name="bluetooth_text">bluetooth</string>
     <string name="results_found_text">Results Found</string>
+    <string name="add_btn">add_btn</string>
 </resources>
