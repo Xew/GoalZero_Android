@@ -1,6 +1,16 @@
 <resources>
-    <string name="app_name">GoalZero_Android</string>
+    <string name="app_name">GoalZero</string>
 
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_add_devices">ADD DEVICES</string>
+    <string name="add_device">Add Device</string>
+    <string name="title_activity_searching">Searching</string>
+    <string name="searching_text">Searching for nearby devices</string>
+    <string name="no_devices_text">No nearby devices found</string>
+    <string name="warning_title">warning</string>
+    <string name="devices_text">Results Found</string>
+    <string name="title_activity_device_found">DeviceFound</string>
+    <string name="bluetooth_text">bluetooth</string>
+    <string name="results_found_text">Results Found</string>
+    <string name="add_btn">add_btn</string>
 </resources>

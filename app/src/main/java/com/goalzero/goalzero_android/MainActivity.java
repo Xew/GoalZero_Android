@@ -1,5 +1,6 @@
 package com.goalzero.goalzero_android;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -34,9 +35,14 @@ public class MainActivity extends ActionBarActivity
 		int id = item.getItemId();
 
 		//noinspection SimplifiableIfStatement
-		if (id == R.id.action_settings)
+		switch (id)
 		{
-			return true;
+			case R.id.action_settings:
+				return true;
+			case R.id.action_find_devices:
+				Intent i = new Intent(getApplicationContext(), AddDevices.class);
+				startActivity(i);
+				return true;
 		}
 
 		return super.onOptionsItemSelected(item);
