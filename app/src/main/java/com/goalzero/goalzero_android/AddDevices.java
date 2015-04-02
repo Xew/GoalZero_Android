@@ -17,6 +17,13 @@ public class AddDevices extends ActionBarActivity
 		setContentView(R.layout.activity_add_devices);
 
 		BluetoothService.init(this);
+		BluetoothService.startScanningForDevices();
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+
 	}
 
 
