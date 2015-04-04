@@ -1,6 +1,6 @@
 package com.goalzero.goalzero_android;
 
-import android.content.Context;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
@@ -12,7 +12,10 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.goalzero.service.BluetoothService;
+
+import java.util.List;
 
 
 public class Searching extends ActionBarActivity
@@ -30,36 +33,31 @@ public class Searching extends ActionBarActivity
 		actionBar.hide();
 		setContentView(R.layout.activity_searching);
 
-		final Context context = this;
-
 		spinner = (ProgressBar) findViewById(R.id.progressBar1);
 		searchTimeout = new Runnable()
 		{
 			@Override
 			public void run()
 			{
-				Toast.makeText(context, "Timed out.", Toast.LENGTH_LONG).show();
+				List<BluetoothDevice> peripherals = BluetoothService.instance().foundPeripherals;
+
+				if(peripherals.size() > 0)
+				{
+					Intent i = new Intent(getApplicationContext(), DeviceFound.class);
+					startActivity(i);
+					return;
+				}
+
 				spinner.setVisibility(View.INVISIBLE);
 				ImageView warning = (ImageView) findViewById(R.id.warning);
 				warning.setVisibility(View.VISIBLE);
-				((TextView) findViewById(R.id.textView)).setText(R.string.no_devices_text);
-			}
-		};
-
-		foundDevice = new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				Intent i = new Intent(getApplicationContext(), DeviceFound.class);
-				startActivity(i);
+				((TextView) findViewById(R.id.text)).setText(R.string.no_devices_text);
 			}
 		};
 
 		handler = new Handler();
 
-		handler.postDelayed(searchTimeout, 2000);
-		handler.postDelayed(foundDevice, 4000);
+		handler.postDelayed(searchTimeout, 4000);
 	}
 
 

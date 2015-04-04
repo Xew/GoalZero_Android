@@ -6,10 +6,17 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +30,7 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 	static final int REQUEST_ENABLE_BT = 0;
 	private boolean isScanning;
 	private ArrayList delegates;
-	private List<BluetoothDevice> foundPeripherals;
+	public List<BluetoothDevice> foundPeripherals;
 
 	private BluetoothGatt uartService;
 	private BluetoothGattCharacteristic rxCharacteristic;
@@ -40,20 +47,65 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 
 	// Device scan callback.
 	private BluetoothAdapter.LeScanCallback mLeScanCallback =
-			new BluetoothAdapter.LeScanCallback() {
+			new BluetoothAdapter.LeScanCallback()
+	{
+		@Override
+		public void onLeScan(final BluetoothDevice device, int rssi,
+												 byte[] scanRecord)
+		{
+			((Activity)_context).runOnUiThread(new Runnable()
+			{
 				@Override
-				public void onLeScan(final BluetoothDevice device, int rssi,
-														 byte[] scanRecord) {
-					((Activity)_context).runOnUiThread(new Runnable()
+				public void run()
+				{
+					boolean found = false;
+					for(BluetoothDevice _device : foundPeripherals)
 					{
-						@Override
-						public void run()
+						if(_device.getAddress().equalsIgnoreCase(device.getAddress()))
 						{
-							foundPeripherals.add(device);
+							found = true;
+							break;
 						}
-					});
+					}
+					if(!found)
+						foundPeripherals.add(device);
 				}
-			};
+			});
+		}
+	};
+
+	private BluetoothGattCallback mgattCallback =  new BluetoothGattCallback()
+	{
+		@Override
+		public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic)
+		{
+
+		}
+
+		@Override
+		public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState)
+		{
+
+		}
+
+		@Override
+		public void onServicesDiscovered(final BluetoothGatt gatt, final int status)
+		{
+			Log.d(TAG, gatt.toString() + " => " + status);
+			List<BluetoothGattService> services = gatt.getServices();
+			for(BluetoothGattService service : services)
+			{
+				Log.d(TAG, gatt.toString() + " => " + status + " => " + service.getUuid().toString());
+				List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
+				for(BluetoothGattCharacteristic characteristic : characteristics)
+				{
+					Log.d(TAG, gatt.toString() + " => " + status + " => " + service.getUuid().toString() + " => " + characteristic.getUuid().toString());
+				}
+			}
+		}
+	};
+
+	private static final String TAG = "BluetoothService";
 
 	private static String uartServiceUUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 	private static UUID[] uartServiceUUIDs = new UUID[]{UUID.fromString(uartServiceUUID)};
@@ -76,12 +128,14 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 
 	public static void init(Context context)
 	{
-		if (_instance == null)
-			_instance = new BluetoothService();
 		_context = context;
-		_instance.getCentralManager();
-		_instance.foundPeripherals = new ArrayList<BluetoothDevice>();
-		handler = new Handler();
+		if (_instance == null)
+		{
+			_instance = new BluetoothService();
+			_instance.getCentralManager();
+			_instance.foundPeripherals = new ArrayList<BluetoothDevice>();
+			handler = new Handler();
+		}
 	}
 
 	public static boolean isScanningForDevices()
@@ -104,7 +158,7 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 			@Override
 			public void run()
 			{
-				_instance.adapter.stopLeScan(_instance.mLeScanCallback);
+				stopScanningForDevices();
 			}
 		}, 5000);
 		_instance.adapter.startLeScan(uartServiceUUIDs, _instance.mLeScanCallback);
@@ -121,7 +175,7 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 
 	public static void connectToDevice(BluetoothDevice peripheral)
 	{
-		peripheral.connectGatt(_context, false, new BluetoothGattCallback(){});
+		peripheral.connectGatt(_context, false, _instance.mgattCallback);
 	}
 
 	public static void addDelegate(BluetoothService delegate)
@@ -144,3 +198,4 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 		return centralManager;
 	}
 }
+

@@ -33,7 +33,7 @@
         android:layout_alignEnd="@+id/progressBar1"
         android:contentDescription="@string/warning_title"
         android:layout_alignStart="@+id/progressBar1"
-        android:layout_above="@+id/textView"
+        android:layout_above="@+id/text"
         android:layout_alignTop="@+id/progressBar1"
         android:visibility="invisible"
         android:tint="#fffaff18"/>

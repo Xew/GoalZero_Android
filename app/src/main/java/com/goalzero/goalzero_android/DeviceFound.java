@@ -1,5 +1,6 @@
 package com.goalzero.goalzero_android;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
@@ -11,10 +12,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+
+import com.goalzero.service.BluetoothDeviceListAdapter;
+import com.goalzero.service.BluetoothService;
+
+import java.util.List;
 
 
 public class DeviceFound extends ActionBarActivity
@@ -37,11 +44,10 @@ public class DeviceFound extends ActionBarActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_device_found);
 
-		Devices = new String[2];
-		Devices[0] = "Yeti 150";
-		Devices[1] = "Yeti 151";
+		List<BluetoothDevice> peripherals = BluetoothService.instance().foundPeripherals;
 
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, Devices);
+		BluetoothDeviceListAdapter adapter = new BluetoothDeviceListAdapter(this, R.layout.blelistitem, peripherals);
+
 
 		ListView devices = (ListView) findViewById(R.id.devicesListView);
 		devices.setAdapter(adapter);
