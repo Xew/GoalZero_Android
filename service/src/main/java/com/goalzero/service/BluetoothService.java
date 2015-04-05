@@ -32,13 +32,7 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 	private ArrayList delegates;
 	public List<BluetoothDevice> foundPeripherals;
 
-	private BluetoothGatt uartService;
-	private BluetoothGattCharacteristic rxCharacteristic;
-	private BluetoothGattCharacteristic txCharacteristic;
-	private String receivedData;
-
-	private BluetoothDevice connectedDevice;
-	public List<BluetoothDevice> peripherals;
+	public List<BluetoothGatt> peripherals;
 	private BluetoothManager centralManager;
 	private BluetoothAdapter adapter;
 
@@ -85,32 +79,33 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 		@Override
 		public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState)
 		{
-
+			if(status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_CONNECTED)
+				gatt.discoverServices();
 		}
 
 		@Override
 		public void onServicesDiscovered(final BluetoothGatt gatt, final int status)
 		{
-			Log.d(TAG, gatt.toString() + " => " + status);
-			List<BluetoothGattService> services = gatt.getServices();
-			for(BluetoothGattService service : services)
-			{
-				Log.d(TAG, gatt.toString() + " => " + status + " => " + service.getUuid().toString());
-				List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
-				for(BluetoothGattCharacteristic characteristic : characteristics)
-				{
-					Log.d(TAG, gatt.toString() + " => " + status + " => " + service.getUuid().toString() + " => " + characteristic.getUuid().toString());
-				}
-			}
+			BluetoothGattService service = gatt.getService(uartServiceUUIDs[0]);
+			if(service == null)
+				return;
+			BluetoothGattCharacteristic rxCharacteristic = service.getCharacteristic(rxCharacteristicUUID);
+			BluetoothGattCharacteristic txCharacteristic = service.getCharacteristic(txCharacteristicUUID);
+			if(rxCharacteristic == null || txCharacteristic == null)
+				return;
+			peripherals.add(gatt);
+			rxCharacteristic.
 		}
 	};
 
-	private static final String TAG = "BluetoothService";
+	private static final String TAG = "test";
 
 	private static String uartServiceUUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 	private static UUID[] uartServiceUUIDs = new UUID[]{UUID.fromString(uartServiceUUID)};
-	private static String rxCharacteristicUUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
-	private static String txCharacteristicUUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+	private static String rxCharacteristicUUIDstr = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+	private static String txCharacteristicUUIDstr = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+	private static UUID rxCharacteristicUUID = UUID.fromString(rxCharacteristicUUIDstr);
+	private static UUID txCharacteristicUUID = UUID.fromString(txCharacteristicUUIDstr);
 
 	private static BluetoothService _instance;
 	private static Context _context;
@@ -135,7 +130,10 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 			_instance.getCentralManager();
 			_instance.foundPeripherals = new ArrayList<BluetoothDevice>();
 			handler = new Handler();
+			_instance.peripherals = new ArrayList<BluetoothGatt>();
 		}
+		_instance.foundPeripherals.clear();
+		_instance.peripherals.clear();
 	}
 
 	public static boolean isScanningForDevices()

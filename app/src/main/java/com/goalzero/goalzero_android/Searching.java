@@ -51,7 +51,7 @@ public class Searching extends ActionBarActivity
 				spinner.setVisibility(View.INVISIBLE);
 				ImageView warning = (ImageView) findViewById(R.id.warning);
 				warning.setVisibility(View.VISIBLE);
-				((TextView) findViewById(R.id.text)).setText(R.string.no_devices_text);
+				((TextView) findViewById(R.id.textView)).setText(R.string.no_devices_text);
 			}
 		};
 

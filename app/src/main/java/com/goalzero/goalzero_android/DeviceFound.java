@@ -3,9 +3,11 @@ package com.goalzero.goalzero_android;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.graphics.Color;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Layout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,15 +28,12 @@ import java.util.List;
 
 public class DeviceFound extends ActionBarActivity
 {
-
-	private String[] Devices;
-	private int selectedDevice = -1;
 	private AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener()
 	{
 		@Override
 		public void onItemClick(AdapterView<?> adapterView, View view, int pos, long id)
 		{
-
+			BluetoothService.connectToDevice((BluetoothDevice)adapterView.getItemAtPosition(pos));
 		}
 	};
 
@@ -52,6 +51,13 @@ public class DeviceFound extends ActionBarActivity
 		ListView devices = (ListView) findViewById(R.id.devicesListView);
 		devices.setAdapter(adapter);
 		devices.setOnItemClickListener(itemClicked);
+	}
+
+	@Override
+	public void onBackPressed()
+	{
+		Log.d("test", "yes");
+		NavUtils.navigateUpFromSameTask(this);
 	}
 
 
