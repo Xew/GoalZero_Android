@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
@@ -18,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +27,7 @@ import java.util.UUID;
 /**
  * Created by Josh on 3/22/2015.
  */
-public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripheralDelegate*/
+public class BluetoothService
 {
 	static final int REQUEST_ENABLE_BT = 0;
 	private boolean isScanning;
@@ -38,14 +40,11 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 
 	private static Handler handler;
 
-
 	// Device scan callback.
-	private BluetoothAdapter.LeScanCallback mLeScanCallback =
-			new BluetoothAdapter.LeScanCallback()
+	private BluetoothAdapter.LeScanCallback mLeScanCallback =	new BluetoothAdapter.LeScanCallback()
 	{
 		@Override
-		public void onLeScan(final BluetoothDevice device, int rssi,
-												 byte[] scanRecord)
+		public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
 		{
 			((Activity)_context).runOnUiThread(new Runnable()
 			{
@@ -53,6 +52,7 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 				public void run()
 				{
 					boolean found = false;
+
 					for(BluetoothDevice _device : foundPeripherals)
 					{
 						if(_device.getAddress().equalsIgnoreCase(device.getAddress()))
@@ -62,18 +62,43 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 						}
 					}
 					if(!found)
+					{
+						for(BluetoothGatt _device : peripherals)
+						{
+							if(_device.getDevice().getAddress().equalsIgnoreCase(device.getAddress()))
+							{
+								found = true;
+								break;
+							}
+						}
+						if(!found)
 						foundPeripherals.add(device);
+					}
 				}
 			});
 		}
 	};
 
-	private BluetoothGattCallback mgattCallback =  new BluetoothGattCallback()
+	private BluetoothGattCallback mGattCallback =  new BluetoothGattCallback()
 	{
+		@Override
+		public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
+		{
+			super.onDescriptorWrite(gatt, descriptor, status);
+		}
+
 		@Override
 		public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic)
 		{
-
+			byte[] data = characteristic.getValue();
+			try
+			{
+				String value = new String(data, "US-ASCII");
+				Log.d(TAG, value);
+			} catch (UnsupportedEncodingException e)
+			{
+				e.printStackTrace();
+			}
 		}
 
 		@Override
@@ -89,12 +114,18 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 			BluetoothGattService service = gatt.getService(uartServiceUUIDs[0]);
 			if(service == null)
 				return;
-			BluetoothGattCharacteristic rxCharacteristic = service.getCharacteristic(rxCharacteristicUUID);
 			BluetoothGattCharacteristic txCharacteristic = service.getCharacteristic(txCharacteristicUUID);
+			BluetoothGattCharacteristic rxCharacteristic = service.getCharacteristic(rxCharacteristicUUID);
+
 			if(rxCharacteristic == null || txCharacteristic == null)
 				return;
 			peripherals.add(gatt);
-			rxCharacteristic.
+			gatt.setCharacteristicNotification(txCharacteristic, true);
+			for(BluetoothGattDescriptor descriptor : txCharacteristic.getDescriptors())
+			{
+				descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+				gatt.writeDescriptor(descriptor);
+			}
 		}
 	};
 
@@ -136,13 +167,38 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 		_instance.peripherals.clear();
 	}
 
+	public static void close()
+	{
+		if(_instance == null || _instance.peripherals == null)
+			return;
+
+		for(BluetoothGatt device : _instance.peripherals)
+		{
+			device.close();
+		}
+	}
+
+	public static void clear()
+	{
+		if(_instance == null || _instance.peripherals == null)
+			return;
+
+		close();
+
+		_instance.peripherals.clear();
+	}
+
 	public static boolean isScanningForDevices()
 	{
+		if(_instance == null)
+			return false;
 		return _instance.isScanning;
 	}
 
 	public static void startScanningForDevices()
 	{
+		if(_instance == null)
+			return;
 		if (!_instance.adapter.isEnabled()) {
 			Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 			((Activity)_context).startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -173,7 +229,9 @@ public class BluetoothService /*implements CBCenteralManagerDelegate, CBPeripher
 
 	public static void connectToDevice(BluetoothDevice peripheral)
 	{
-		peripheral.connectGatt(_context, false, _instance.mgattCallback);
+		if(_instance == null)
+			return;
+		peripheral.connectGatt(_context, false, _instance.mGattCallback);
 	}
 
 	public static void addDelegate(BluetoothService delegate)

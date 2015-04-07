@@ -29,6 +29,10 @@ public class Searching extends ActionBarActivity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+
+		BluetoothService.init(this);
+		BluetoothService.startScanningForDevices();
+
 		ActionBar actionBar = getSupportActionBar();
 		actionBar.hide();
 		setContentView(R.layout.activity_searching);

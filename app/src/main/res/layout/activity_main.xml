@@ -10,4 +10,15 @@
                 android:src="@drawable/gz_bg_3"
                 android:background="@drawable/gz_bg_1">
 
+    <view
+        android:layout_width="wrap_content"
+        android:layout_height="80dp"
+        class="com.goalzero.goalzero_android.GZDeviceView"
+        android:id="@+id/gz_device"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:background="#8d959595"
+        android:paddingLeft="10dp"
+        android:paddingBottom="20dp"
+        android:visibility="invisible"/>
 </RelativeLayout>

@@ -1,10 +1,16 @@
 package com.goalzero.goalzero_android;
 
+import android.bluetooth.BluetoothGatt;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+
+import com.goalzero.service.BluetoothService;
+
+import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity
@@ -15,6 +21,14 @@ public class MainActivity extends ActionBarActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		BluetoothService.init(this);
+		List<BluetoothGatt> peripherals = BluetoothService.instance().peripherals;
+
+		if(peripherals.size() > 0)
+		{
+			GZDeviceView deviceView = (GZDeviceView)findViewById(R.id.gz_device);
+			deviceView.setVisibility(View.VISIBLE);
+		}
 	}
 
 
@@ -46,5 +60,12 @@ public class MainActivity extends ActionBarActivity
 		}
 
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	protected void onDestroy()
+	{
+		BluetoothService.close();
+		super.onDestroy();
 	}
 }

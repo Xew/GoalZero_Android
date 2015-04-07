@@ -28,12 +28,16 @@ import java.util.List;
 
 public class DeviceFound extends ActionBarActivity
 {
+	private static DeviceFound last = null;
+
 	private AdapterView.OnItemClickListener itemClicked = new AdapterView.OnItemClickListener()
 	{
 		@Override
 		public void onItemClick(AdapterView<?> adapterView, View view, int pos, long id)
 		{
 			BluetoothService.connectToDevice((BluetoothDevice)adapterView.getItemAtPosition(pos));
+			NavUtils.navigateUpFromSameTask(last);
+			BluetoothService.instance().foundPeripherals.remove(pos);
 		}
 	};
 
@@ -41,6 +45,9 @@ public class DeviceFound extends ActionBarActivity
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+
+		last = this;
+
 		setContentView(R.layout.activity_device_found);
 
 		List<BluetoothDevice> peripherals = BluetoothService.instance().foundPeripherals;

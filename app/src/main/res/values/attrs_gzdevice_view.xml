@@ -1,0 +1,7 @@
+<resources>
+    <declare-styleable name="GZDeviceView">
+        <attr name="BatteryPercent" format="integer"/>
+        <attr name="Voltage" format="float"/>
+        <attr name="Temperature" format="integer"/>
+    </declare-styleable>
+</resources>
