@@ -13,11 +13,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -25,13 +20,13 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Created by Josh on 3/22/2015.
+ * Created by Josh on 3/22/2015. A
  */
 public class BluetoothService
 {
 	static final int REQUEST_ENABLE_BT = 0;
 	private boolean isScanning;
-	private ArrayList delegates;
+	// ArrayList delegates;
 	public List<BluetoothDevice> foundPeripherals;
 
 	public List<BluetoothGatt> peripherals;
@@ -159,9 +154,9 @@ public class BluetoothService
 		{
 			_instance = new BluetoothService();
 			_instance.getCentralManager();
-			_instance.foundPeripherals = new ArrayList<BluetoothDevice>();
+			_instance.foundPeripherals = new ArrayList<>();
 			handler = new Handler();
-			_instance.peripherals = new ArrayList<BluetoothGatt>();
+			_instance.peripherals = new ArrayList<>();
 		}
 		_instance.foundPeripherals.clear();
 		_instance.peripherals.clear();
@@ -190,9 +185,7 @@ public class BluetoothService
 
 	public static boolean isScanningForDevices()
 	{
-		if(_instance == null)
-			return false;
-		return _instance.isScanning;
+		return _instance != null && _instance.isScanning;
 	}
 
 	public static void startScanningForDevices()
@@ -234,7 +227,7 @@ public class BluetoothService
 		peripheral.connectGatt(_context, false, _instance.mGattCallback);
 	}
 
-	public static void addDelegate(BluetoothService delegate)
+	/*public static void addDelegate(BluetoothService delegate)
 	{
 
 	}
@@ -242,7 +235,7 @@ public class BluetoothService
 	public static void removeDelegate(BluetoothService delegate)
 	{
 
-	}
+	}/**/
 
 	public BluetoothManager getCentralManager()
 	{

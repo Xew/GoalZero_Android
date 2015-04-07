@@ -15,6 +15,10 @@ public class AddDevices extends ActionBarActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_add_devices);
+		if(BluetoothService.isScanningForDevices())
+		{
+			
+		}
 	}
 
 	@Override
