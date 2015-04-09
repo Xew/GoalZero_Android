@@ -26,12 +26,23 @@ public class BluetoothService
 {
 	static final int REQUEST_ENABLE_BT = 0;
 	private boolean isScanning;
-	// ArrayList delegates;
+	private List<BluetoothServiceDelegate> delegates;
 	public List<BluetoothDevice> foundPeripherals;
 
 	public List<BluetoothGatt> peripherals;
+	public BluetoothDevice selectedPeripherals;
 	private BluetoothManager centralManager;
 	private BluetoothAdapter adapter;
+
+	private static final String TAG = "test";
+
+	private static UUID uartServiceUUID = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+	private static UUID rxCharacteristicUUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
+	private static UUID txCharacteristicUUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
+	private static UUID configUUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+
+	private static BluetoothService _instance;
+	private static Context _context;
 
 	private static Handler handler;
 
@@ -41,41 +52,45 @@ public class BluetoothService
 		@Override
 		public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord)
 		{
-			((Activity)_context).runOnUiThread(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					boolean found = false;
+			boolean found = false;
 
-					for(BluetoothDevice _device : foundPeripherals)
+			for(BluetoothDevice _device : foundPeripherals)
+			{
+				if(_device.getAddress().equalsIgnoreCase(device.getAddress()))
+				{
+					found = true;
+					break;
+				}
+			}
+			if(!found)
+			{
+				for(BluetoothGatt _device : peripherals)
+				{
+					if(_device.getDevice().getAddress().equalsIgnoreCase(device.getAddress()))
 					{
-						if(_device.getAddress().equalsIgnoreCase(device.getAddress()))
-						{
-							found = true;
-							break;
-						}
-					}
-					if(!found)
-					{
-						for(BluetoothGatt _device : peripherals)
-						{
-							if(_device.getDevice().getAddress().equalsIgnoreCase(device.getAddress()))
-							{
-								found = true;
-								break;
-							}
-						}
-						if(!found)
-						foundPeripherals.add(device);
+						found = true;
+						break;
 					}
 				}
-			});
+				if(!found)
+					foundPeripherals.add(device);
+				for(BluetoothServiceDelegate delegate : delegates)
+				{
+					delegate.didDiscoverDevice(device);
+				}
+			}
 		}
 	};
 
 	private BluetoothGattCallback mGattCallback =  new BluetoothGattCallback()
 	{
+		@Override
+		public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
+		{
+			super.onCharacteristicRead(gatt, characteristic, status);
+
+		}
+
 		@Override
 		public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status)
 		{
@@ -89,7 +104,10 @@ public class BluetoothService
 			try
 			{
 				String value = new String(data, "US-ASCII");
-				Log.d(TAG, value);
+				for(BluetoothServiceDelegate delegate : delegates)
+				{
+					delegate.didReceiveDataForPeripheral(value, gatt);
+				}
 			} catch (UnsupportedEncodingException e)
 			{
 				e.printStackTrace();
@@ -99,14 +117,18 @@ public class BluetoothService
 		@Override
 		public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState)
 		{
+			if(gatt == null)
+				return;
 			if(status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_CONNECTED)
 				gatt.discoverServices();
+			else
+				Log.i("error","failure to connect");
 		}
 
 		@Override
 		public void onServicesDiscovered(final BluetoothGatt gatt, final int status)
 		{
-			BluetoothGattService service = gatt.getService(uartServiceUUIDs[0]);
+			BluetoothGattService service = gatt.getService(uartServiceUUID);
 			if(service == null)
 				return;
 			BluetoothGattCharacteristic txCharacteristic = service.getCharacteristic(txCharacteristicUUID);
@@ -114,27 +136,32 @@ public class BluetoothService
 
 			if(rxCharacteristic == null || txCharacteristic == null)
 				return;
-			peripherals.add(gatt);
-			gatt.setCharacteristicNotification(txCharacteristic, true);
-			for(BluetoothGattDescriptor descriptor : txCharacteristic.getDescriptors())
+			boolean found = false;
+			for(BluetoothGatt per : peripherals)
 			{
+				if(per.getDevice().getAddress().equalsIgnoreCase(gatt.getDevice().getAddress()))
+				{
+					found = true;
+					break;
+				}
+			}
+			if(!found)
+			{
+				peripherals.add(gatt);
+				for (BluetoothServiceDelegate delegate : delegates)
+				{
+					delegate.didConnectToPeripheral(gatt);
+				}
+				gatt.setCharacteristicNotification(txCharacteristic, true);
+				BluetoothGattDescriptor descriptor = txCharacteristic.getDescriptor(configUUID);
+
 				descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 				gatt.writeDescriptor(descriptor);
 			}
 		}
 	};
 
-	private static final String TAG = "test";
 
-	private static String uartServiceUUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
-	private static UUID[] uartServiceUUIDs = new UUID[]{UUID.fromString(uartServiceUUID)};
-	private static String rxCharacteristicUUIDstr = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
-	private static String txCharacteristicUUIDstr = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
-	private static UUID rxCharacteristicUUID = UUID.fromString(rxCharacteristicUUIDstr);
-	private static UUID txCharacteristicUUID = UUID.fromString(txCharacteristicUUIDstr);
-
-	private static BluetoothService _instance;
-	private static Context _context;
 
 	private BluetoothService()
 	{
@@ -149,6 +176,11 @@ public class BluetoothService
 
 	public static void init(Context context)
 	{
+		init(context, true);
+	}
+
+	public static void init(Context context, boolean clearPeripherals)
+	{
 		_context = context;
 		if (_instance == null)
 		{
@@ -157,9 +189,13 @@ public class BluetoothService
 			_instance.foundPeripherals = new ArrayList<>();
 			handler = new Handler();
 			_instance.peripherals = new ArrayList<>();
+			_instance.delegates = new ArrayList<>();
 		}
-		_instance.foundPeripherals.clear();
-		_instance.peripherals.clear();
+		if(clearPeripherals)
+		{
+			_instance.foundPeripherals.clear();
+			_instance.peripherals.clear();
+		}
 	}
 
 	public static void close()
@@ -169,6 +205,15 @@ public class BluetoothService
 
 		for(BluetoothGatt device : _instance.peripherals)
 		{
+			BluetoothGattCharacteristic txCharacteristic = device.getService(uartServiceUUID).getCharacteristic(txCharacteristicUUID);
+			//device.setCharacteristicNotification(txCharacteristic, false);
+
+			for(BluetoothGattDescriptor descriptor : txCharacteristic.getDescriptors())
+			{
+				//descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+				//device.writeDescriptor(descriptor);
+			}
+			device.disconnect();
 			device.close();
 		}
 	}
@@ -207,8 +252,8 @@ public class BluetoothService
 			{
 				stopScanningForDevices();
 			}
-		}, 5000);
-		_instance.adapter.startLeScan(uartServiceUUIDs, _instance.mLeScanCallback);
+		}, 3500);
+		_instance.adapter.startLeScan(new UUID[]{uartServiceUUID}, _instance.mLeScanCallback);
 	}
 
 	public static void stopScanningForDevices()
@@ -224,18 +269,20 @@ public class BluetoothService
 	{
 		if(_instance == null)
 			return;
-		peripheral.connectGatt(_context, false, _instance.mGattCallback);
+		peripheral.connectGatt(_context, true, _instance.mGattCallback);
 	}
 
-	/*public static void addDelegate(BluetoothService delegate)
+	public static void addDelegate(BluetoothServiceDelegate delegate)
 	{
-
+		if(!_instance.delegates.contains(delegate))
+			_instance.delegates.add(delegate);
 	}
 
-	public static void removeDelegate(BluetoothService delegate)
+	public static void removeDelegate(BluetoothServiceDelegate delegate)
 	{
-
-	}/**/
+		if(_instance.delegates.contains(delegate))
+			_instance.delegates.remove(delegate);
+	}
 
 	public BluetoothManager getCentralManager()
 	{

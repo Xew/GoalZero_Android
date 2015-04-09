@@ -3,6 +3,7 @@ package com.goalzero.goalzero_android;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.graphics.Color;
+import android.os.SystemClock;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -13,17 +14,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
 
 import com.goalzero.service.BluetoothDeviceListAdapter;
 import com.goalzero.service.BluetoothService;
 
 import java.util.List;
+import android.os.Handler;
 
 
 public class DeviceFound extends ActionBarActivity
@@ -36,8 +33,20 @@ public class DeviceFound extends ActionBarActivity
 		public void onItemClick(AdapterView<?> adapterView, View view, int pos, long id)
 		{
 			BluetoothService.connectToDevice((BluetoothDevice)adapterView.getItemAtPosition(pos));
-			NavUtils.navigateUpFromSameTask(last);
+			BluetoothService.instance().selectedPeripherals = (BluetoothDevice)adapterView.getItemAtPosition(pos);
 			BluetoothService.instance().foundPeripherals.remove(pos);
+
+
+			Handler handler = new Handler();
+			handler.postDelayed(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					NavUtils.navigateUpFromSameTask(last);
+				}
+			}, 1000);
+
 		}
 	};
 
