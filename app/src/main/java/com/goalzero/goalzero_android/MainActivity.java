@@ -87,7 +87,7 @@ public class MainActivity extends ActionBarActivity implements BluetoothServiceD
 	protected void onStop()
 	{
 		super.onStop();
-		BluetoothService.close();
+		//BluetoothService.close();
 		BluetoothService.removeDelegate(this);
 	}
 
@@ -106,12 +106,25 @@ public class MainActivity extends ActionBarActivity implements BluetoothServiceD
 	@Override
 	public void didReceiveDataForPeripheral(String data, BluetoothGatt peripheral)
 	{
-		StringBuilder sBuilder = new StringBuilder(deviceStrings.get(peripheral.getDevice().getAddress()));
+		StringBuilder sBuilder = new StringBuilder();
+		sBuilder.append(deviceStrings.get(peripheral.getDevice().getAddress()));
 		sBuilder.append(data);
 		String currentString = sBuilder.toString();
 
 		Log.i("BlueDebug", peripheral.getDevice().getName() + "(" + peripheral.getDevice().getAddress() + ") => " + currentString);
 		Matcher matcher = pattern.matcher(currentString);
+
+		deviceStrings.put(peripheral.getDevice().getAddress(),currentString);
+
+		if(matcher.find())
+		{
+			Log.i("BlueDebug", "frame "+ matcher.group(1));
+			GZDeviceView deviceView = (GZDeviceView)findViewById(R.id.gz_device);
+			deviceView.setBatteryPercent(Integer.parseInt(matcher.group(6)));
+			deviceView.setVoltage(Float.parseFloat(matcher.group(2))/100);
+			deviceView.setTemperature(Integer.parseInt(matcher.group(4))/10);
+
+		}
 
 		if(currentString.matches(pattern.toString()))
 		{

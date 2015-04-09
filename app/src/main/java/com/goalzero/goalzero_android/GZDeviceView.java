@@ -132,7 +132,7 @@ public class GZDeviceView extends View
 				mVoltageTextPaint);
 
 		canvas.drawText("" + mTemperature + "°F",
-				paddingLeft + 80,
+				paddingLeft + 120,
 				paddingTop + contentHeight - (mTempuratureTextHeight * 9),
 				mTempuratureTextPaint);
 	}
@@ -155,15 +155,21 @@ public class GZDeviceView extends View
 	public void setBatteryPercent(int value)
 	{
 		mBattteryPercent = value;
+		invalidate();
+		requestLayout();
 	}
 
 	public void setVoltage(float value)
 	{
 		mVoltage = value;
+		invalidate();
+		requestLayout();
 	}
 
 	public void setTemperature(int value)
 	{
 		mTemperature = value;
+		invalidate();
+		requestLayout();
 	}
 }

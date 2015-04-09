@@ -17,6 +17,7 @@ import android.util.Log;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -31,6 +32,7 @@ public class BluetoothService
 
 	public List<BluetoothGatt> peripherals;
 	public BluetoothDevice selectedPeripherals;
+	public BluetoothGatt _selectedGatt;
 	private BluetoothManager centralManager;
 	private BluetoothAdapter adapter;
 
@@ -45,6 +47,78 @@ public class BluetoothService
 	private static Context _context;
 
 	private static Handler handler;
+
+	private static Runnable fakedata = new Runnable()
+	{
+		int frame = 1;
+		int voltage = 1240;
+		int ampDraw = 1;
+		int boardTemp = 680;
+		int mcuTemp = 700;
+		int batterypercentage = 80;
+
+		int stage = 1;
+		@Override
+		public void run()
+		{
+			if(_instance != null && _instance._selectedGatt != null)
+			{
+				Random ran = new Random();
+				//".*([0-9]{4}).+([0-9]{4})v.+([0-9]{4})i.+([0-9]{4})tb.+([0-9]{4})ti.+chg([0-9]{1,3}).*dsg.*"
+				StringBuilder sbuilder = new StringBuilder();
+				if(stage == 1)
+				{
+					if (ran.nextBoolean())
+						sbuilder.append("z ");
+					sbuilder.append(String.format("%04d", frame++));
+					sbuilder.append("   ");
+					voltage += (40 - ran.nextFloat() * 80);
+					if(voltage < 0)
+						voltage = 0;
+					sbuilder.append(String.format("%04dv", voltage));
+				}
+				else if(stage == 2)
+				{
+					sbuilder.append("   ");
+					ampDraw += (4 - ran.nextFloat() * 8);
+					if(ampDraw < 0)
+						ampDraw = 0;
+					sbuilder.append(String.format("%04di", ampDraw));
+					sbuilder.append("   ");
+					boardTemp += (10 - ran.nextFloat() * 20);
+					if(boardTemp < 0)
+						boardTemp = 0;
+					sbuilder.append(String.format("%04dtb", boardTemp));
+				}
+				else if(stage == 3)
+				{
+					sbuilder.append("   ");
+					mcuTemp += (10 - ran.nextFloat() * 20);
+					if(mcuTemp < 0)
+						mcuTemp = 0;
+					sbuilder.append(String.format("%04dti", mcuTemp));
+					sbuilder.append("   ");
+				}
+				else if(stage == 4)
+				{
+					batterypercentage += (10 - ran.nextFloat() * 20);
+					if(batterypercentage < 0)
+						batterypercentage = 0;
+					sbuilder.append(String.format("chg%03d", batterypercentage));
+					sbuilder.append("  dsg   ");
+					stage = 0;
+				}
+
+				stage++;
+
+				for(BluetoothServiceDelegate delegate : _instance.delegates)
+				{
+					delegate.didReceiveDataForPeripheral(sbuilder.toString(), _instance._selectedGatt);
+				}
+				handler.postDelayed(this, 200);
+			}
+		}
+	};
 
 	// Device scan callback.
 	private BluetoothAdapter.LeScanCallback mLeScanCallback =	new BluetoothAdapter.LeScanCallback()
@@ -100,6 +174,7 @@ public class BluetoothService
 		@Override
 		public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic)
 		{
+			handler.removeCallbacks(fakedata);
 			byte[] data = characteristic.getValue();
 			try
 			{
@@ -120,7 +195,10 @@ public class BluetoothService
 			if(gatt == null)
 				return;
 			if(status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_CONNECTED)
+			{
 				gatt.discoverServices();
+				_selectedGatt = gatt;
+			}
 			else
 				Log.i("error","failure to connect");
 		}
@@ -148,16 +226,17 @@ public class BluetoothService
 			if(!found)
 			{
 				peripherals.add(gatt);
-				for (BluetoothServiceDelegate delegate : delegates)
-				{
-					delegate.didConnectToPeripheral(gatt);
-				}
-				gatt.setCharacteristicNotification(txCharacteristic, true);
-				BluetoothGattDescriptor descriptor = txCharacteristic.getDescriptor(configUUID);
-
-				descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-				gatt.writeDescriptor(descriptor);
 			}
+			for (BluetoothServiceDelegate delegate : delegates)
+			{
+				delegate.didConnectToPeripheral(gatt);
+			}
+			gatt.setCharacteristicNotification(txCharacteristic, true);
+			BluetoothGattDescriptor descriptor = txCharacteristic.getDescriptor(configUUID);
+
+			descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+			gatt.writeDescriptor(descriptor);
+			handler.postDelayed(fakedata,1500);
 		}
 	};
 
@@ -181,7 +260,9 @@ public class BluetoothService
 
 	public static void init(Context context, boolean clearPeripherals)
 	{
-		_context = context;
+		if(_context == null)
+			_context = context;
+		//_context = context;
 		if (_instance == null)
 		{
 			_instance = new BluetoothService();
@@ -202,6 +283,8 @@ public class BluetoothService
 	{
 		if(_instance == null || _instance.peripherals == null)
 			return;
+
+		handler.removeCallbacks(fakedata);
 
 		for(BluetoothGatt device : _instance.peripherals)
 		{
@@ -269,7 +352,7 @@ public class BluetoothService
 	{
 		if(_instance == null)
 			return;
-		peripheral.connectGatt(_context, true, _instance.mGattCallback);
+		peripheral.connectGatt(_context, false, _instance.mGattCallback);
 	}
 
 	public static void addDelegate(BluetoothServiceDelegate delegate)
@@ -286,7 +369,7 @@ public class BluetoothService
 
 	public BluetoothManager getCentralManager()
 	{
-		if (centralManager == null)
+		if (centralManager == null && _context != null)
 		{
 			centralManager = (BluetoothManager) _context.getSystemService(Context.BLUETOOTH_SERVICE);
 			adapter = centralManager.getAdapter();
