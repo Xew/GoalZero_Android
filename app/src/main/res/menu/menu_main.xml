@@ -14,4 +14,22 @@
         android:orderInCategory="100"
         app:showAsAction="never"/>
 
+    <item
+        android:id="@+id/action_12v_toggle"
+        android:title="@string/action_12v_toggle"
+        android:orderInCategory="100"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_usb_toggle"
+        android:title="@string/action_usb_toggle"
+        android:orderInCategory="100"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_ac_toggle"
+        android:title="@string/action_ac_toggle"
+        android:orderInCategory="100"
+        app:showAsAction="never"/>
+
 </menu>

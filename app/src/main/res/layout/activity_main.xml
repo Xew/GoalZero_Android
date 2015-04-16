@@ -12,13 +12,22 @@
 
     <view
         android:layout_width="wrap_content"
-        android:layout_height="80dp"
+        android:layout_height="90dp"
         class="com.goalzero.goalzero_android.GZDeviceView"
         android:id="@+id/gz_device"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:background="#8d959595"
+        android:background="#00959595"
         android:paddingLeft="10dp"
         android:paddingBottom="20dp"
         android:visibility="invisible"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/deviceName"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"/>
+
 </RelativeLayout>

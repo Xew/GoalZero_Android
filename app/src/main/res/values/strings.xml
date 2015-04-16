@@ -13,4 +13,7 @@
     <string name="bluetooth_text">bluetooth</string>
     <string name="results_found_text">Results Found</string>
     <string name="add_btn">add_btn</string>
+    <string name="action_12v_toggle">Toggle 12v</string>
+    <string name="action_usb_toggle">Toggle USB</string>
+    <string name="action_ac_toggle">Toggle AC</string>
 </resources>

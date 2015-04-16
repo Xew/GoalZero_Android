@@ -82,15 +82,15 @@ public class GZDeviceView extends View
 
 	private void invalidateTextPaintAndMeasurements()
 	{
-		mBatteryTextPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50, getResources().getDisplayMetrics()));
+		mBatteryTextPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 70, getResources().getDisplayMetrics()));
 		mBatteryTextPaint.setColor(Color.WHITE);
 		mBatteryTextWidth = mBatteryTextPaint.measureText("" + mBattteryPercent  + "%");
 
-		mVoltageTextPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics()));
+		mVoltageTextPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()));
 		mVoltageTextPaint.setColor(Color.WHITE);
 		mVoltageTextWidth = mVoltageTextPaint.measureText("" + mVoltage  + "v");
 
-		mTempuratureTextPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12, getResources().getDisplayMetrics()));
+		mTempuratureTextPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()));
 		mTempuratureTextPaint.setColor(Color.WHITE);
 		mTempuratureTextWidth = mTempuratureTextPaint.measureText("" + mTemperature + "°F");
 
@@ -128,12 +128,12 @@ public class GZDeviceView extends View
 
 		canvas.drawText("" + mVoltage  + "v",
 				paddingLeft,
-				paddingTop + contentHeight - (mVoltageTextHeight * 9),
+				paddingTop + contentHeight - (mVoltageTextHeight * 6)- 10,
 				mVoltageTextPaint);
 
 		canvas.drawText("" + mTemperature + "°F",
-				paddingLeft + 120,
-				paddingTop + contentHeight - (mTempuratureTextHeight * 9),
+				paddingLeft + 225,
+				paddingTop + contentHeight - (mTempuratureTextHeight * 6) - 10,
 				mTempuratureTextPaint);
 	}
 

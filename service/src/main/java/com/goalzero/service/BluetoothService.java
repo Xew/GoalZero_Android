@@ -35,6 +35,7 @@ public class BluetoothService
 	public BluetoothGatt _selectedGatt;
 	private BluetoothManager centralManager;
 	private BluetoothAdapter adapter;
+	private Boolean closing = false;
 
 	private static final String TAG = "test";
 
@@ -199,6 +200,10 @@ public class BluetoothService
 				gatt.discoverServices();
 				_selectedGatt = gatt;
 			}
+			else if(newState == BluetoothGatt.STATE_DISCONNECTED && !closing)
+			{
+				gatt.connect();
+			}
 			else
 				Log.i("error","failure to connect");
 		}
@@ -236,7 +241,7 @@ public class BluetoothService
 
 			descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 			gatt.writeDescriptor(descriptor);
-			handler.postDelayed(fakedata,1500);
+			//handler.postDelayed(fakedata,1500);
 		}
 	};
 
@@ -251,6 +256,16 @@ public class BluetoothService
 		if (_instance == null)
 			init(null);
 		return _instance;
+	}
+
+	public void SendOutlet(int outlet)
+	{
+		if(_selectedGatt != null)
+		{
+			BluetoothGattCharacteristic rxCharacteristic = _selectedGatt.getService(uartServiceUUID).getCharacteristic(rxCharacteristicUUID);
+			rxCharacteristic.setValue("AT+OUTLET="+outlet);
+			_selectedGatt.writeCharacteristic(rxCharacteristic);
+		}
 	}
 
 	public static void init(Context context)
@@ -285,16 +300,17 @@ public class BluetoothService
 			return;
 
 		handler.removeCallbacks(fakedata);
+		_instance.closing = true;
 
 		for(BluetoothGatt device : _instance.peripherals)
 		{
 			BluetoothGattCharacteristic txCharacteristic = device.getService(uartServiceUUID).getCharacteristic(txCharacteristicUUID);
-			//device.setCharacteristicNotification(txCharacteristic, false);
+			device.setCharacteristicNotification(txCharacteristic, false);
 
 			for(BluetoothGattDescriptor descriptor : txCharacteristic.getDescriptors())
 			{
-				//descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-				//device.writeDescriptor(descriptor);
+				descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+				device.writeDescriptor(descriptor);
 			}
 			device.disconnect();
 			device.close();
@@ -352,7 +368,8 @@ public class BluetoothService
 	{
 		if(_instance == null)
 			return;
-		peripheral.connectGatt(_context, false, _instance.mGattCallback);
+		_instance.closing = false;
+		peripheral.connectGatt(_context, true, _instance.mGattCallback);
 	}
 
 	public static void addDelegate(BluetoothServiceDelegate delegate)

@@ -61,7 +61,7 @@ public class Searching extends ActionBarActivity
 
 		handler = new Handler();
 
-		handler.postDelayed(searchTimeout, 4000);
+		handler.postDelayed(searchTimeout, 2500);
 	}
 
 

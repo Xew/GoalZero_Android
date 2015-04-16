@@ -32,7 +32,7 @@ public class DeviceFound extends ActionBarActivity
 		@Override
 		public void onItemClick(AdapterView<?> adapterView, View view, int pos, long id)
 		{
-			BluetoothService.connectToDevice((BluetoothDevice)adapterView.getItemAtPosition(pos));
+			//BluetoothService.connectToDevice((BluetoothDevice)adapterView.getItemAtPosition(pos));
 			BluetoothService.instance().selectedPeripherals = (BluetoothDevice)adapterView.getItemAtPosition(pos);
 			BluetoothService.instance().foundPeripherals.remove(pos);
 

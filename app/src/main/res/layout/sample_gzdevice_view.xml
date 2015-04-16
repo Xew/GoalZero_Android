@@ -5,9 +5,9 @@
     android:layout_height="match_parent">
 
     <com.goalzero.goalzero_android.GZDeviceView
-        android:background="#0ccc"
+        android:background="#00ffffff"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="110dp"
         android:paddingStart="10dp"
         android:paddingBottom="20dp"
         app:BatteryPercent="40"
