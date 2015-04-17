@@ -33,7 +33,7 @@
         <activity
             android:name=".Searching"
             android:label="@string/title_activity_searching"
-            android:parentActivityName=".AddDevices"
+            android:parentActivityName=".MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" >
             <meta-data
@@ -43,18 +43,12 @@
         <activity
             android:name=".DeviceFound"
             android:label="@string/title_activity_device_found"
-            android:parentActivityName=".AddDevices"
+            android:parentActivityName=".MainActivity"
             android:screenOrientation="portrait" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.goalzero.goalzero_android.AddDevices" />
         </activity>
-
-        <service
-            android:name=".MyService"
-            android:enabled="true"
-            android:exported="true" >
-        </service>
     </application>
 
 </manifest>

@@ -15,10 +15,6 @@ public class AddDevices extends ActionBarActivity
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_add_devices);
-		if(BluetoothService.isScanningForDevices())
-		{
-
-		}
 		if(BluetoothService.instance().selectedPeripherals == null)
 		{
 			Intent i = new Intent(getApplicationContext(), Searching.class);
